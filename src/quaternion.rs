@@ -1,102 +1,130 @@
+use alga::general::Ring;
+use nalgebra::Vector4;
 use num_traits::{One, Zero};
 use std::fmt;
-use std::ops::{Add, AddAssign, Index, Mul, MulAssign, Neg, Sub};
-
-const DIM4: usize = 4;
+use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 
 /// Quaternion
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Quaternion<T>
 where
-    T: Copy + Clone + fmt::Debug + PartialEq,
+    T: Ring + fmt::Debug + Copy + 'static,
 {
-    data: [T; DIM4],
-}
-
-impl<T> From<[T; DIM4]> for Quaternion<T>
-where
-    T: fmt::Debug + Copy + PartialEq,
-{
-    fn from(data: [T; DIM4]) -> Self {
-        Self { data }
-    }
+    inner: Vector4<T>,
 }
 
 impl<T> Quaternion<T>
 where
-    T: Copy + fmt::Debug + PartialEq + Clone + Zero,
+    T: Ring + fmt::Debug + Copy,
 {
-    pub fn from_iter(it: impl Iterator<Item = T>) -> Self {
-        let mut data = [T::zero(); DIM4];
-        for (x, i) in it.zip(0..DIM4) {
-            data[i] = x;
-        }
-        Self { data }
+    pub fn from_iter(iter: impl Iterator<Item = T>) -> Self {
+        Self::from(Vector4::from_iterator(iter))
+    }
+}
+
+impl<T> fmt::Display for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy + fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}+{}i+{}j+{}k", self[0], self[1], self[2], self[3])
+    }
+}
+
+impl<T> Index<usize> for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy,
+{
+    type Output = T;
+
+    #[inline]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.inner[index]
+    }
+}
+
+impl<T> IndexMut<usize> for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy,
+{
+    #[inline]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.inner[index]
+    }
+}
+
+impl<T> From<Vector4<T>> for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy + 'static,
+{
+    fn from(inner: Vector4<T>) -> Self {
+        Self { inner }
+    }
+}
+
+impl<T> From<[T; 4]> for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy,
+{
+    fn from(arr: [T; 4]) -> Self {
+        Self::from(Vector4::from(arr))
     }
 }
 
 impl<T> Add for Quaternion<T>
 where
-    T: Copy + fmt::Debug + Zero + Add + PartialEq,
+    T: Ring + fmt::Debug + Copy,
 {
     type Output = Self;
 
     #[inline]
     fn add(self, other: Self) -> Self {
-        let mut data = [T::zero(); DIM4];
-        for i in 0..DIM4 {
-            data[i] = self.data[i] + other.data[i];
-        }
-        Self { data }
+        Quaternion::from(self.inner + other.inner)
     }
 }
 
 impl<T> AddAssign for Quaternion<T>
 where
-    T: Copy + fmt::Debug + Zero + AddAssign + PartialEq,
+    T: Ring + fmt::Debug + Copy,
 {
     #[inline]
     fn add_assign(&mut self, other: Self) {
-        *self = self.add(other)
+        self.inner += other.inner
     }
 }
 
 impl<T> Neg for Quaternion<T>
 where
-    T: Copy + fmt::Debug + PartialEq + Neg<Output = T>,
+    T: Ring + fmt::Debug + Copy,
 {
     type Output = Self;
 
     #[inline]
-    fn neg(mut self) -> Self {
-        for i in 0..DIM4 {
-            self.data[i] = self.data[i].neg();
-        }
-        self
+    fn neg(self) -> Self {
+        self.inner.neg().into()
     }
 }
 
 impl<T> Zero for Quaternion<T>
 where
-    T: Copy + fmt::Debug + Zero + PartialEq,
+    T: Ring + fmt::Debug + Copy,
 {
     #[inline]
     fn zero() -> Self {
         Self {
-            data: [T::zero(); DIM4],
+            inner: Vector4::zero(),
         }
     }
 
     #[inline]
     fn is_zero(&self) -> bool {
-        let z = T::zero();
-        &self[0] == &z && &self[1] == &z && &self[2] == &z && &self[3] == &z
+        self.inner.is_zero()
     }
 }
 
 impl<T> Mul for Quaternion<T>
 where
-    T: Copy + Clone + fmt::Debug + PartialEq + Sub<Output = T> + Mul<Output = T> + Add<Output = T>,
+    T: Ring + fmt::Debug + Copy,
 {
     type Output = Self;
 
@@ -111,21 +139,24 @@ where
 
 impl<T> MulAssign for Quaternion<T>
 where
-    T: Copy + fmt::Debug + PartialEq + Mul<Output = T> + Add<Output = T> + Sub<Output = T>,
+    T: Ring + fmt::Debug + Copy,
 {
     fn mul_assign(&mut self, other: Self) {
-        *self = self.mul(other)
+        self[0] = self[0] * other[0] - self[1] * other[1] - self[2] * other[2] - self[3] * other[3];
+        self[1] = self[0] * other[1] + self[1] * other[0] + self[2] * other[3] - self[3] * other[2];
+        self[2] = self[0] * other[2] + self[2] * other[0] + self[3] * other[1] - self[1] * other[3];
+        self[3] = self[0] * other[3] + self[3] * other[0] + self[1] * other[2] - self[2] * other[1];
     }
 }
 
 impl<T> One for Quaternion<T>
 where
-    T: Copy + fmt::Debug + PartialEq + Add<Output = T> + Sub<Output = T> + Mul + One + Zero,
+    T: Ring + fmt::Debug + Copy,
 {
     #[inline]
     fn one() -> Self {
         Self {
-            data: [T::one(), T::zero(), T::zero(), T::zero()],
+            inner: Vector4::from([T::one(), T::zero(), T::zero(), T::zero()]),
         }
     }
 
@@ -137,17 +168,6 @@ where
     }
 }
 
-impl<T> Index<usize> for Quaternion<T>
-where
-    T: Copy + fmt::Debug + PartialEq,
-{
-    type Output = T;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index]
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,7 +176,7 @@ mod tests {
 
     impl Arbitrary for Quaternion<i64> {
         fn arbitrary<G: Gen>(g: &mut G) -> Quaternion<i64> {
-            Quaternion::from_iter((0..DIM4).into_iter().map(|_| g.gen()))
+            Quaternion::from_iter((0..4).into_iter().map(|_| g.gen()))
         }
     }
 

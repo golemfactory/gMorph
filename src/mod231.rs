@@ -1,16 +1,32 @@
-use modinverse::modinverse;
+use super::Invertible;
+use alga::general::{AbstractMagma, Additive, Identity, Multiplicative, TwoSidedInverse};
 use num_traits::identities::{One, Zero};
+use rand::distributions::{Distribution, Standard};
+use rand::Rng;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
-const MODULUS: i64 = 2147483647;
+const MODULUS: u32 = 2147483647u32;
+const MODULUSi64: i64 = 2147483647i64;
+const MODULUSu64: u64 = 2147483647u64;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Mod231(pub i64);
+#[derive(Clone, Copy, Debug, PartialEq, Alga)]
+#[alga_traits(Ring(Additive, Multiplicative))]
+pub struct Mod231(pub u32);
 
 impl Mod231 {
-    pub fn reciprocal(&self) -> Option<Self> {
-        modinverse(self.0, MODULUS).map(Mod231)
+    pub fn recip(&self) -> Self {
+        match modinverse::modinverse(self.0 as i64, MODULUSi64) {
+            Some(y) => Mod231(y as u32),
+            None => panic!("recip: no inverse"),
+        }
+    }
+}
+
+impl Invertible for Mod231 {
+    type Item = Mod231;
+    fn try_invert(&self) -> Option<Self::Item> {
+        modinverse::modinverse(self.0 as i64, MODULUSi64).map(|x| Mod231(x as u32))
     }
 }
 
@@ -20,9 +36,15 @@ impl fmt::Display for Mod231 {
     }
 }
 
+impl Distribution<Mod231> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Mod231 {
+        Mod231::from(rng.gen::<u32>())
+    }
+}
+
 impl Zero for Mod231 {
     fn zero() -> Self {
-        Self(0)
+        Mod231(0)
     }
 
     fn is_zero(&self) -> bool {
@@ -32,7 +54,7 @@ impl Zero for Mod231 {
 
 impl One for Mod231 {
     fn one() -> Self {
-        Self(1)
+        Mod231(1)
     }
 
     fn is_one(&self) -> bool {
@@ -41,13 +63,43 @@ impl One for Mod231 {
 }
 
 #[inline]
-fn normalize(x: i64) -> i64 {
-    ((x % MODULUS) + MODULUS) % MODULUS
+fn modulo(mut v: u32) -> u32 {
+    if v >= MODULUS {
+        v = (v >> 31) + (v & MODULUS);
+        while v >= MODULUS {
+            v -= MODULUS;
+        }
+    }
+    v
 }
 
-impl From<i64> for Mod231 {
-    fn from(x: i64) -> Self {
-        Self(normalize(x))
+fn normalize_u64(mut v: u64) -> u32 {
+    if v >= MODULUSu64 {
+        v = (v >> 31) + (v & MODULUSu64);
+        while v >= MODULUSu64 {
+            v -= MODULUSu64;
+        }
+    }
+    v as u32
+}
+
+#[inline]
+pub fn normalize(x: u32) -> u32 {
+    modulo(x)
+}
+
+// #[inline]
+// pub fn normalize(x: u32) -> u32 {
+//     ((x % MODULUS) + MODULUS) % MODULUS
+// }
+
+// pub fn normalize_u64(x: u64) -> u32 {
+//     (x % MODULUSu64) as u32
+// }
+
+impl From<u32> for Mod231 {
+    fn from(x: u32) -> Self {
+        Mod231(normalize(x))
     }
 }
 
@@ -61,7 +113,7 @@ impl Add for Mod231 {
 
 impl AddAssign for Mod231 {
     fn add_assign(&mut self, other: Self) {
-        self.0 += other.0
+        *self = self.add(other)
     }
 }
 
@@ -69,13 +121,13 @@ impl Mul for Mod231 {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self {
-        Self(normalize(self.0 * other.0))
+        Self(normalize_u64(self.0 as u64 * other.0 as u64))
     }
 }
 
 impl MulAssign for Mod231 {
     fn mul_assign(&mut self, other: Self) {
-        self.0 *= other.0
+        *self = self.mul(other)
     }
 }
 
@@ -102,15 +154,51 @@ impl SubAssign for Mod231 {
 }
 
 impl Div for Mod231 {
-    type Output = Option<Self>;
+    type Output = Self;
 
-    fn div(self, other: Self) -> Self::Output {
-        other.reciprocal().map(|x| Mod231(normalize(self.0 * x.0)))
+    fn div(self, other: Self) -> Self {
+        Self(normalize(self.0 * other.recip().0))
     }
 }
 
-impl PartialEq<i64> for Mod231 {
-    fn eq(&self, other: &i64) -> bool {
+impl Identity<Additive> for Mod231 {
+    fn identity() -> Self {
+        Self::zero()
+    }
+}
+
+impl TwoSidedInverse<Additive> for Mod231 {
+    fn two_sided_inverse(&self) -> Self {
+        Self::zero() - *self
+    }
+}
+
+impl Identity<Multiplicative> for Mod231 {
+    fn identity() -> Self {
+        Self::one()
+    }
+}
+
+impl TwoSidedInverse<Multiplicative> for Mod231 {
+    fn two_sided_inverse(&self) -> Self {
+        Self::one() / *self
+    }
+}
+
+impl AbstractMagma<Additive> for Mod231 {
+    fn operate(&self, right: &Self) -> Self {
+        *self + *right
+    }
+}
+
+impl AbstractMagma<Multiplicative> for Mod231 {
+    fn operate(&self, right: &Self) -> Self {
+        *self * *right
+    }
+}
+
+impl PartialEq<u32> for Mod231 {
+    fn eq(&self, other: &u32) -> bool {
         self.0 == *other
     }
 }
@@ -129,7 +217,7 @@ mod tests {
     }
 
     quickcheck! {
-        fn prop_normalize(x: i64) -> bool {
+        fn prop_normalize(x: u32) -> bool {
             normalize(x) == ((x % MODULUS) + MODULUS) % MODULUS
         }
     }
@@ -146,7 +234,7 @@ mod tests {
                 return TestResult::discard()
             }
 
-            TestResult::from_bool(x * x.reciprocal().unwrap() == Mod231(1) )
+            TestResult::from_bool(x * x.recip() == Mod231(1) )
         }
     }
 }
