@@ -1,5 +1,8 @@
 pub mod matrix;
 pub mod mod231;
-pub mod q231;
 pub mod quaternion;
-pub mod vector;
+
+use mod231::Mod231;
+use quaternion::Quaternion;
+
+pub type Q231 = Quaternion<Mod231>;
