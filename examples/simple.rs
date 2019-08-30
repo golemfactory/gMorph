@@ -1,15 +1,16 @@
 use gmorph::prelude::*;
-use nalgebra::{dimension, Matrix3, MatrixN};
+use nalgebra::dimension::U100;
+use nalgebra::{ArrayStorage, Matrix, Matrix3};
 use std::fs;
 use std::io::Write;
 
-type Matrix10<T> = MatrixN<T, dimension::U10>;
+type MatrixM<N> = Matrix<N, U100, U100, ArrayStorage<N, U100, U100>>;
 
 fn main() {
     let mut f = fs::File::create("result").unwrap();
 
-    let data: Matrix10<u32> = Matrix10::from_iterator((1..).into_iter());
-    let mut encode: Matrix10<Matrix3<Q231>> = data.map(|x| {
+    let data: MatrixM<u32> = MatrixM::from_iterator((1..).into_iter());
+    let mut encode: MatrixM<Matrix3<Q231>> = data.map(|x| {
         let x_mod231: Mod231 = x.into();
         let x_q231: Q231 = x_mod231.into();
         x_q231.into()
@@ -19,7 +20,7 @@ fn main() {
         encode *= encode;
     }
 
-    let decode: Matrix10<u32> = encode.map(|x| {
+    let decode: MatrixM<u32> = encode.map(|x| {
         let x_q231 = Q231::from(x);
         let x_mod231 = x_q231.w;
         x_mod231.0
