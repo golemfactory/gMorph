@@ -77,7 +77,7 @@ fn normalize_u64(mut v: u64) -> u32 {
 }
 
 #[inline]
-pub fn normalize(x: u32) -> u32 {
+fn normalize(x: u32) -> u32 {
     modulo(x)
 }
 

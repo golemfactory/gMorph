@@ -18,3 +18,9 @@ pub trait RingM: Ring + Debug + Copy {
             .unwrap_or_else(|| panic!("item non-invertible"))
     }
 }
+
+pub mod prelude {
+    pub use super::mod231::{Mod231, Q231};
+    pub use super::quaternion::QuaternionM;
+    pub use super::RingM;
+}
