@@ -1,8 +1,10 @@
 use alga::general::Ring;
-use nalgebra::Vector4;
+use nalgebra::base::coordinates::IJKW;
+use nalgebra::{Vector3, Vector4};
 use num_traits::{One, Zero};
 use std::fmt;
-use std::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
+use std::mem;
+use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg, Sub};
 
 /// Quaternion
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -10,15 +12,63 @@ pub struct Quaternion<T>
 where
     T: Ring + fmt::Debug + Copy + 'static,
 {
-    inner: Vector4<T>,
+    inner: Vector4<T>, // [x, y, z, w] or w + xi + yj + zk
 }
 
 impl<T> Quaternion<T>
 where
     T: Ring + fmt::Debug + Copy,
 {
-    pub fn from_iter(iter: impl Iterator<Item = T>) -> Self {
-        Self::from(Vector4::from_iterator(iter))
+    #[inline]
+    pub fn new(w: T, i: T, j: T, k: T) -> Self {
+        Self::from(Vector4::new(i, j, k, w))
+    }
+
+    #[inline]
+    pub fn from_parts(w: T, ijk: Vector3<T>) -> Self {
+        Self::new(w, ijk[0], ijk[1], ijk[2])
+    }
+
+    #[inline]
+    pub fn from_real(w: T) -> Self {
+        Self::from_parts(w, Vector3::zero())
+    }
+
+    #[inline]
+    pub fn from_imag(ijk: Vector3<T>) -> Self {
+        Self::from_parts(T::zero(), ijk)
+    }
+
+    #[inline]
+    pub fn imag(&self) -> Vector3<T> {
+        self.inner.xyz()
+    }
+
+    #[inline]
+    pub fn conjugate(&self) -> Self {
+        Self::from_parts(self.w, -self.imag())
+    }
+}
+
+impl<T> Deref for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy,
+{
+    type Target = IJKW<T>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        unsafe { mem::transmute(self) }
+    }
+}
+
+impl<T> DerefMut for Quaternion<T>
+where
+    T: Ring + fmt::Debug + Copy,
+{
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { mem::transmute(self) }
     }
 }
 
@@ -27,29 +77,7 @@ where
     T: Ring + fmt::Debug + Copy + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}+{}i+{}j+{}k", self[0], self[1], self[2], self[3])
-    }
-}
-
-impl<T> Index<usize> for Quaternion<T>
-where
-    T: Ring + fmt::Debug + Copy,
-{
-    type Output = T;
-
-    #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.inner[index]
-    }
-}
-
-impl<T> IndexMut<usize> for Quaternion<T>
-where
-    T: Ring + fmt::Debug + Copy,
-{
-    #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.inner[index]
+        write!(f, "{}+{}i+{}j+{}k", self.w, self.i, self.j, self.k)
     }
 }
 
@@ -111,9 +139,7 @@ where
 {
     #[inline]
     fn zero() -> Self {
-        Self {
-            inner: Vector4::zero(),
-        }
+        Self::from(Vector4::zero())
     }
 
     #[inline]
@@ -129,11 +155,11 @@ where
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        let e = self[0] * other[0] - self[1] * other[1] - self[2] * other[2] - self[3] * other[3];
-        let i = self[0] * other[1] + self[1] * other[0] + self[2] * other[3] - self[3] * other[2];
-        let j = self[0] * other[2] + self[2] * other[0] + self[3] * other[1] - self[1] * other[3];
-        let k = self[0] * other[3] + self[3] * other[0] + self[1] * other[2] - self[2] * other[1];
-        Self::from([e, i, j, k])
+        let w = self.w * other.w - self.i * other.i - self.j * other.j - self.k * other.k;
+        let i = self.w * other.i + self.i * other.i + self.j * other.k - self.k * other.j;
+        let j = self.w * other.j + self.j * other.i + self.k * other.i - self.i * other.k;
+        let k = self.w * other.k + self.k * other.i + self.i * other.j - self.j * other.i;
+        Self::new(w, i, j, k)
     }
 }
 
@@ -142,10 +168,10 @@ where
     T: Ring + fmt::Debug + Copy,
 {
     fn mul_assign(&mut self, other: Self) {
-        self[0] = self[0] * other[0] - self[1] * other[1] - self[2] * other[2] - self[3] * other[3];
-        self[1] = self[0] * other[1] + self[1] * other[0] + self[2] * other[3] - self[3] * other[2];
-        self[2] = self[0] * other[2] + self[2] * other[0] + self[3] * other[1] - self[1] * other[3];
-        self[3] = self[0] * other[3] + self[3] * other[0] + self[1] * other[2] - self[2] * other[1];
+        self.w = self.w * other.w - self.i * other.i - self.j * other.j - self.k * other.k;
+        self.i = self.w * other.i + self.i * other.i + self.j * other.k - self.k * other.j;
+        self.j = self.w * other.j + self.j * other.i + self.k * other.i - self.i * other.k;
+        self.k = self.w * other.k + self.k * other.i + self.i * other.j - self.j * other.i;
     }
 }
 
@@ -155,46 +181,83 @@ where
 {
     #[inline]
     fn one() -> Self {
-        Self {
-            inner: Vector4::from([T::one(), T::zero(), T::zero(), T::zero()]),
-        }
+        Self::from_real(T::one())
     }
 
     #[inline]
     fn is_one(&self) -> bool {
-        let zero = T::zero();
-        let one = T::one();
-        &self[0] == &one && &self[1] == &zero && &self[2] == &zero && &self[3] == &zero
+        self.w.is_one() && self.imag().is_zero()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use quickcheck::{quickcheck, Arbitrary, Gen};
-    use rand::Rng;
+    use crate::mod231::Mod231;
+    use quickcheck::{quickcheck, Arbitrary, Gen, TestResult};
 
-    impl Arbitrary for Quaternion<i64> {
-        fn arbitrary<G: Gen>(g: &mut G) -> Quaternion<i64> {
-            Quaternion::from_iter((0..4).into_iter().map(|_| g.gen()))
+    type Q231 = Quaternion<Mod231>;
+
+    impl Arbitrary for Q231 {
+        fn arbitrary<G: Gen>(g: &mut G) -> Q231 {
+            Q231::new(
+                Mod231::arbitrary(g),
+                Mod231::arbitrary(g),
+                Mod231::arbitrary(g),
+                Mod231::arbitrary(g),
+            )
         }
     }
 
     quickcheck! {
-        fn quaternion_add(x: Quaternion<i64>) -> bool {
-            x + Quaternion::zero() == x
+      fn add_commutative(a: Q231, b: Q231) -> bool {
+          a + b == b + a
+      }
+    }
+
+    quickcheck! {
+        fn prop_conjugate1(a: Q231) -> bool {
+            a + a.conjugate() == Q231::from(Mod231::from(2) * a.w)
         }
     }
 
     quickcheck! {
-        fn quaternion_mul(x: Quaternion<i64>) -> bool {
-            x * Quaternion::one() == x
+        fn prop_conjugate2(a: Q231) -> bool {
+            (a + a.conjugate()).imag() == Vector3::zero()
         }
     }
 
-    quickcheck! {
-        fn quaternion_neg(x: Quaternion<i64>) -> bool {
-            (x + x.neg()).is_zero()
-        }
-    }
+    // quickcheck! {
+    //     fn prop_recip_right(a: Q231) -> TestResult {
+    //         if a.is_zero() {
+    //             TestResult::discard()
+    //         } else {
+    //             TestResult::from_bool(a * a.recip() == Q231::one())
+    //         }
+    //     }
+    // }
+
+    // quickcheck! {
+    //     fn prop_recip_left(a: Q231) -> TestResult {
+    //         if a.is_zero() {
+    //             TestResult::discard()
+    //         } else {
+    //             TestResult::from_bool(a.recip() * a == Q231::one())
+    //         }
+    //     }
+    // }
+
+    // quickcheck! {
+    //     fn prop_into_matrix_and_back(a: Q231) -> bool {
+    //         let b: Matrix3<Q231> = a.into();
+    //         Q231::from(b) == a
+    //     }
+    // }
+
+    // quickcheck! {
+    //     fn multiply_matrices(a: Q231) -> bool {
+    //         let m1: Matrix3<Q231> = a.into();
+    //         Q231::from(m1 *m1) == a * a
+    //     }
+    // }
 }

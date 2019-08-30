@@ -1,4 +1,3 @@
-pub mod matrix;
 pub mod mod231;
 pub mod quaternion;
 

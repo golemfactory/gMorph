@@ -1,4 +1,5 @@
 use super::Invertible;
+use crate::quaternion::Quaternion;
 use alga::general::{AbstractMagma, Additive, Identity, Multiplicative, TwoSidedInverse};
 use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
@@ -200,6 +201,12 @@ impl AbstractMagma<Multiplicative> for Mod231 {
 impl PartialEq<u32> for Mod231 {
     fn eq(&self, other: &u32) -> bool {
         self.0 == *other
+    }
+}
+
+impl From<Mod231> for Quaternion<Mod231> {
+    fn from(w: Mod231) -> Self {
+        Quaternion::from_real(w)
     }
 }
 
