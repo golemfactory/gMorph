@@ -1,23 +1,23 @@
-use alga::general::Ring;
+use super::RingM;
 use nalgebra::base::coordinates::IJKW;
 use nalgebra::{Vector3, Vector4};
 use num_traits::{One, Zero};
 use std::fmt;
 use std::mem;
-use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg};
 
-/// Quaternion
+/// Quaternion over a ring mod N
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Quaternion<T>
+pub struct QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy + 'static,
+    T: RingM + 'static,
 {
     inner: Vector4<T>, // [x, y, z, w] or w + xi + yj + zk
 }
 
-impl<T> Quaternion<T>
+impl<T> QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     #[inline]
     pub fn new(w: T, i: T, j: T, k: T) -> Self {
@@ -46,13 +46,33 @@ where
 
     #[inline]
     pub fn conjugate(&self) -> Self {
-        Self::from_parts(self.w, -self.imag())
+        Self::from_parts(self.w, self.imag().neg())
+    }
+
+    #[inline]
+    pub fn norm2(&self) -> T {
+        (*self * self.conjugate()).w
+    }
+
+    #[inline]
+    pub fn scale(&self, w: T) -> Self {
+        Self::from_real(w) * *self
     }
 }
 
-impl<T> Deref for Quaternion<T>
+impl<T> QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM<Item = T>,
+{
+    #[inline]
+    pub fn recip(&self) -> Self {
+        self.conjugate().scale(self.norm2().invert())
+    }
+}
+
+impl<T> Deref for QuaternionM<T>
+where
+    T: RingM,
 {
     type Target = IJKW<T>;
 
@@ -62,9 +82,9 @@ where
     }
 }
 
-impl<T> DerefMut for Quaternion<T>
+impl<T> DerefMut for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -72,48 +92,48 @@ where
     }
 }
 
-impl<T> fmt::Display for Quaternion<T>
+impl<T> fmt::Display for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy + fmt::Display,
+    T: RingM + fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}+{}i+{}j+{}k", self.w, self.i, self.j, self.k)
     }
 }
 
-impl<T> From<Vector4<T>> for Quaternion<T>
+impl<T> From<Vector4<T>> for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy + 'static,
+    T: RingM + 'static,
 {
     fn from(inner: Vector4<T>) -> Self {
         Self { inner }
     }
 }
 
-impl<T> From<[T; 4]> for Quaternion<T>
+impl<T> From<[T; 4]> for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     fn from(arr: [T; 4]) -> Self {
         Self::from(Vector4::from(arr))
     }
 }
 
-impl<T> Add for Quaternion<T>
+impl<T> Add for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     type Output = Self;
 
     #[inline]
     fn add(self, other: Self) -> Self {
-        Quaternion::from(self.inner + other.inner)
+        QuaternionM::from(self.inner + other.inner)
     }
 }
 
-impl<T> AddAssign for Quaternion<T>
+impl<T> AddAssign for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     #[inline]
     fn add_assign(&mut self, other: Self) {
@@ -121,9 +141,9 @@ where
     }
 }
 
-impl<T> Neg for Quaternion<T>
+impl<T> Neg for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     type Output = Self;
 
@@ -133,9 +153,9 @@ where
     }
 }
 
-impl<T> Zero for Quaternion<T>
+impl<T> Zero for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     #[inline]
     fn zero() -> Self {
@@ -148,36 +168,34 @@ where
     }
 }
 
-impl<T> Mul for Quaternion<T>
+impl<T> Mul for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        let w = self.w * other.w - self.i * other.i - self.j * other.j - self.k * other.k;
-        let i = self.w * other.i + self.i * other.i + self.j * other.k - self.k * other.j;
-        let j = self.w * other.j + self.j * other.i + self.k * other.i - self.i * other.k;
-        let k = self.w * other.k + self.k * other.i + self.i * other.j - self.j * other.i;
-        Self::new(w, i, j, k)
+        let s_ijk = self.imag();
+        let o_ijk = other.imag();
+        Self::from_parts(
+            self.w * other.w - s_ijk.dot(&o_ijk),
+            s_ijk.cross(&o_ijk) + (o_ijk * self.w) + s_ijk * other.w,
+        )
     }
 }
 
-impl<T> MulAssign for Quaternion<T>
+impl<T> MulAssign for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     fn mul_assign(&mut self, other: Self) {
-        self.w = self.w * other.w - self.i * other.i - self.j * other.j - self.k * other.k;
-        self.i = self.w * other.i + self.i * other.i + self.j * other.k - self.k * other.j;
-        self.j = self.w * other.j + self.j * other.i + self.k * other.i - self.i * other.k;
-        self.k = self.w * other.k + self.k * other.i + self.i * other.j - self.j * other.i;
+        *self = *self * other
     }
 }
 
-impl<T> One for Quaternion<T>
+impl<T> One for QuaternionM<T>
 where
-    T: Ring + fmt::Debug + Copy,
+    T: RingM,
 {
     #[inline]
     fn one() -> Self {
@@ -196,7 +214,7 @@ mod tests {
     use crate::mod231::Mod231;
     use quickcheck::{quickcheck, Arbitrary, Gen, TestResult};
 
-    type Q231 = Quaternion<Mod231>;
+    type Q231 = QuaternionM<Mod231>;
 
     impl Arbitrary for Q231 {
         fn arbitrary<G: Gen>(g: &mut G) -> Q231 {
@@ -227,25 +245,25 @@ mod tests {
         }
     }
 
-    // quickcheck! {
-    //     fn prop_recip_right(a: Q231) -> TestResult {
-    //         if a.is_zero() {
-    //             TestResult::discard()
-    //         } else {
-    //             TestResult::from_bool(a * a.recip() == Q231::one())
-    //         }
-    //     }
-    // }
+    quickcheck! {
+        fn prop_recip_right(a: Q231) -> TestResult {
+            if a.is_zero() {
+                TestResult::discard()
+            } else {
+                TestResult::from_bool(a * a.recip() == Q231::one())
+            }
+        }
+    }
 
-    // quickcheck! {
-    //     fn prop_recip_left(a: Q231) -> TestResult {
-    //         if a.is_zero() {
-    //             TestResult::discard()
-    //         } else {
-    //             TestResult::from_bool(a.recip() * a == Q231::one())
-    //         }
-    //     }
-    // }
+    quickcheck! {
+        fn prop_recip_left(a: Q231) -> TestResult {
+            if a.is_zero() {
+                TestResult::discard()
+            } else {
+                TestResult::from_bool(a.recip() * a == Q231::one())
+            }
+        }
+    }
 
     // quickcheck! {
     //     fn prop_into_matrix_and_back(a: Q231) -> bool {

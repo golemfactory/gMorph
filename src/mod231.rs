@@ -1,5 +1,5 @@
-use super::Invertible;
-use crate::quaternion::Quaternion;
+use super::RingM;
+use crate::quaternion::QuaternionM;
 use alga::general::{AbstractMagma, Additive, Identity, Multiplicative, TwoSidedInverse};
 use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
@@ -15,17 +15,9 @@ const MODULUSu64: u64 = 2147483647u64;
 #[alga_traits(Ring(Additive, Multiplicative))]
 pub struct Mod231(pub u32);
 
-impl Mod231 {
-    pub fn recip(&self) -> Self {
-        match modinverse::modinverse(self.0 as i64, MODULUSi64) {
-            Some(y) => Mod231(y as u32),
-            None => panic!("recip: no inverse"),
-        }
-    }
-}
-
-impl Invertible for Mod231 {
+impl RingM for Mod231 {
     type Item = Mod231;
+
     fn try_invert(&self) -> Option<Self::Item> {
         modinverse::modinverse(self.0 as i64, MODULUSi64).map(|x| Mod231(x as u32))
     }
@@ -74,6 +66,7 @@ fn modulo(mut v: u32) -> u32 {
     v
 }
 
+#[inline]
 fn normalize_u64(mut v: u64) -> u32 {
     if v >= MODULUSu64 {
         v = (v >> 31) + (v & MODULUSu64);
@@ -89,15 +82,6 @@ pub fn normalize(x: u32) -> u32 {
     modulo(x)
 }
 
-// #[inline]
-// pub fn normalize(x: u32) -> u32 {
-//     ((x % MODULUS) + MODULUS) % MODULUS
-// }
-
-// pub fn normalize_u64(x: u64) -> u32 {
-//     (x % MODULUSu64) as u32
-// }
-
 impl From<u32> for Mod231 {
     fn from(x: u32) -> Self {
         Mod231(normalize(x))
@@ -107,7 +91,7 @@ impl From<u32> for Mod231 {
 impl Add for Mod231 {
     type Output = Self;
 
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self::Output {
         Self(normalize(self.0 + other.0))
     }
 }
@@ -121,7 +105,7 @@ impl AddAssign for Mod231 {
 impl Mul for Mod231 {
     type Output = Self;
 
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self::Output {
         Self(normalize_u64(self.0 as u64 * other.0 as u64))
     }
 }
@@ -143,7 +127,7 @@ impl Neg for Mod231 {
 impl Sub for Mod231 {
     type Output = Self;
 
-    fn sub(self, other: Self) -> Self {
+    fn sub(self, other: Self) -> Self::Output {
         Self(normalize(self.0 + other.neg().0))
     }
 }
@@ -157,8 +141,8 @@ impl SubAssign for Mod231 {
 impl Div for Mod231 {
     type Output = Self;
 
-    fn div(self, other: Self) -> Self {
-        Self(normalize(self.0 * other.recip().0))
+    fn div(self, other: Self) -> Self::Output {
+        Self(normalize(self.0 * other.invert().0))
     }
 }
 
@@ -204,9 +188,9 @@ impl PartialEq<u32> for Mod231 {
     }
 }
 
-impl From<Mod231> for Quaternion<Mod231> {
+impl From<Mod231> for QuaternionM<Mod231> {
     fn from(w: Mod231) -> Self {
-        Quaternion::from_real(w)
+        QuaternionM::from_real(w)
     }
 }
 
@@ -236,12 +220,12 @@ mod tests {
     }
 
     quickcheck! {
-        fn x_mul_recip_x(x: Mod231) -> TestResult {
+        fn x_mul_invert_x(x: Mod231) -> TestResult {
             if x == Mod231(0) {
                 return TestResult::discard()
             }
 
-            TestResult::from_bool(x * x.recip() == Mod231(1) )
+            TestResult::from_bool(x * x.invert() == Mod231(1) )
         }
     }
 }
