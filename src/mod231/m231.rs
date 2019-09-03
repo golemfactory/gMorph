@@ -1,4 +1,4 @@
-use crate::RingM;
+use crate::Invertible;
 use alga::general::{AbstractMagma, Additive, Identity, Multiplicative, TwoSidedInverse};
 use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
@@ -14,7 +14,7 @@ const MODULUSu64: u64 = 2147483647u64;
 #[alga_traits(Ring(Additive, Multiplicative))]
 pub struct Mod231(pub u32);
 
-impl RingM for Mod231 {
+impl Invertible for Mod231 {
     type Item = Mod231;
 
     fn try_invert(&self) -> Option<Self::Item> {
@@ -190,7 +190,7 @@ impl PartialEq<u32> for Mod231 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use quickcheck::{quickcheck, Arbitrary, Gen, TestResult};
+    use quickcheck::{Arbitrary, Gen, TestResult};
     use rand::Rng;
 
     impl Arbitrary for Mod231 {
@@ -198,27 +198,28 @@ mod tests {
             let i = g.gen_range(0, MODULUS);
             Mod231(i)
         }
-    }
 
-    quickcheck! {
-        fn prop_normalize(x: u32) -> bool {
-            normalize(x) == ((x % MODULUS) + MODULUS) % MODULUS
+        fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+            Box::new(self.0.shrink().map(Mod231::from))
         }
     }
 
-    quickcheck! {
-      fn double_negate_is_identity(x: Mod231) -> bool {
-          x == x.neg().neg()
-      }
+    #[quickcheck]
+    fn prop_normalize(x: u32) -> bool {
+        normalize(x) == ((x % MODULUS) + MODULUS) % MODULUS
     }
 
-    quickcheck! {
-        fn x_mul_invert_x(x: Mod231) -> TestResult {
-            if x == Mod231(0) {
-                return TestResult::discard()
-            }
+    #[quickcheck]
+    fn double_negate_is_identity(x: Mod231) -> bool {
+        x == x.neg().neg()
+    }
 
-            TestResult::from_bool(x * x.invert() == Mod231(1) )
+    #[quickcheck]
+    fn x_mul_invert_x(x: Mod231) -> TestResult {
+        if x == Mod231(0) {
+            return TestResult::discard();
         }
+
+        TestResult::from_bool(x * x.invert() == Mod231(1))
     }
 }

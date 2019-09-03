@@ -1,23 +1,24 @@
-use super::RingM;
+use super::Invertible;
+use alga::general::Ring;
 use nalgebra::base::coordinates::IJKW;
 use nalgebra::{Vector3, Vector4};
 use num_traits::{One, Zero};
 use std::fmt;
 use std::mem;
-use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg};
+use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Quaternion over a ring mod N
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct QuaternionM<T>
 where
-    T: RingM + 'static,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     inner: Vector4<T>, // [x, y, z, w] or w + xi + yj + zk
 }
 
 impl<T> QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     #[inline]
     pub fn new(w: T, i: T, j: T, k: T) -> Self {
@@ -60,19 +61,19 @@ where
     }
 }
 
-impl<T> QuaternionM<T>
-where
-    T: RingM<Item = T>,
-{
-    #[inline]
-    pub fn recip(&self) -> Self {
-        self.conjugate().scale(self.norm2().invert())
-    }
-}
+// impl<T> QuaternionM<T>
+// where
+//     T: Ring + fmt::Debug + Copy + Invertible + 'static,
+// {
+//     #[inline]
+//     pub fn recip(&self) -> Self {
+//         self.conjugate().scale(self.norm2().invert())
+//     }
+// }
 
 impl<T> Deref for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     type Target = IJKW<T>;
 
@@ -84,7 +85,7 @@ where
 
 impl<T> DerefMut for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -94,7 +95,7 @@ where
 
 impl<T> fmt::Display for QuaternionM<T>
 where
-    T: RingM + fmt::Display,
+    T: Ring + fmt::Debug + fmt::Display + Copy + Invertible + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}+{}i+{}j+{}k", self.w, self.i, self.j, self.k)
@@ -103,7 +104,7 @@ where
 
 impl<T> From<Vector4<T>> for QuaternionM<T>
 where
-    T: RingM + 'static,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     fn from(inner: Vector4<T>) -> Self {
         Self { inner }
@@ -112,7 +113,7 @@ where
 
 impl<T> From<[T; 4]> for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     fn from(arr: [T; 4]) -> Self {
         Self::from(Vector4::from(arr))
@@ -121,7 +122,7 @@ where
 
 impl<T> Add for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     type Output = Self;
 
@@ -133,7 +134,7 @@ where
 
 impl<T> AddAssign for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     #[inline]
     fn add_assign(&mut self, other: Self) {
@@ -141,9 +142,31 @@ where
     }
 }
 
+impl<T> Sub for QuaternionM<T>
+where
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
+{
+    type Output = Self;
+
+    #[inline]
+    fn sub(self, other: Self) -> Self {
+        QuaternionM::from(self.inner - other.inner)
+    }
+}
+
+impl<T> SubAssign for QuaternionM<T>
+where
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
+{
+    #[inline]
+    fn sub_assign(&mut self, other: Self) {
+        self.inner -= other.inner
+    }
+}
+
 impl<T> Neg for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     type Output = Self;
 
@@ -155,7 +178,7 @@ where
 
 impl<T> Zero for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     #[inline]
     fn zero() -> Self {
@@ -170,7 +193,7 @@ where
 
 impl<T> Mul for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     type Output = Self;
 
@@ -186,7 +209,7 @@ where
 
 impl<T> MulAssign for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     fn mul_assign(&mut self, other: Self) {
         *self = *self * other
@@ -195,7 +218,7 @@ where
 
 impl<T> One for QuaternionM<T>
 where
-    T: RingM,
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
     #[inline]
     fn one() -> Self {

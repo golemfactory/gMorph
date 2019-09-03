@@ -1,5 +1,6 @@
 use super::m231::Mod231;
 use crate::quaternion::QuaternionM;
+use crate::Invertible;
 use nalgebra::{Matrix3, Vector4};
 use num_traits::Zero;
 use rand::distributions::{Distribution, Standard};
@@ -10,6 +11,16 @@ pub type Q231 = QuaternionM<Mod231>;
 impl From<Mod231> for Q231 {
     fn from(w: Mod231) -> Self {
         Self::from_real(w)
+    }
+}
+
+impl Invertible for Q231 {
+    type Item = Q231;
+
+    fn try_invert(&self) -> Option<Self::Item> {
+        let norm = self.norm2();
+        let renorm = norm.try_invert()?;
+        Some(self.conjugate().scale(renorm))
     }
 }
 
@@ -41,7 +52,7 @@ mod tests {
     use crate::mod231::Mod231;
     use nalgebra::Vector3;
     use num_traits::{One, Zero};
-    use quickcheck::{quickcheck, Arbitrary, Gen, TestResult};
+    use quickcheck::{Arbitrary, Gen, TestResult};
 
     impl Arbitrary for Q231 {
         fn arbitrary<G: Gen>(g: &mut G) -> Q231 {
@@ -52,57 +63,78 @@ mod tests {
                 Mod231::arbitrary(g),
             )
         }
-    }
 
-    quickcheck! {
-      fn add_commutative(a: Q231, b: Q231) -> bool {
-          a + b == b + a
-      }
-    }
-
-    quickcheck! {
-        fn prop_conjugate1(a: Q231) -> bool {
-            a + a.conjugate() == Q231::from(Mod231::from(2) * a.w)
+        fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+            let iter = std::iter::empty();
+            let cloned = self.clone();
+            let iter = iter.chain(self.w.shrink().map(move |w| {
+                let mut q = cloned.clone();
+                q.w = w;
+                q
+            }));
+            let cloned = self.clone();
+            let iter = iter.chain(self.i.shrink().map(move |i| {
+                let mut q = cloned.clone();
+                q.i = i;
+                q
+            }));
+            let cloned = self.clone();
+            let iter = iter.chain(self.j.shrink().map(move |j| {
+                let mut q = cloned.clone();
+                q.j = j;
+                q
+            }));
+            let cloned = self.clone();
+            let iter = iter.chain(self.k.shrink().map(move |k| {
+                let mut q = cloned.clone();
+                q.k = k;
+                q
+            }));
+            Box::new(iter)
         }
     }
 
-    quickcheck! {
-        fn prop_conjugate2(a: Q231) -> bool {
-            (a + a.conjugate()).imag() == Vector3::zero()
+    #[quickcheck]
+    fn add_commutative(a: Q231, b: Q231) -> bool {
+        a + b == b + a
+    }
+
+    #[quickcheck]
+    fn prop_conjugate1(a: Q231) -> bool {
+        a + a.conjugate() == Q231::from(Mod231::from(2) * a.w)
+    }
+
+    #[quickcheck]
+    fn prop_conjugate2(a: Q231) -> bool {
+        (a + a.conjugate()).imag() == Vector3::zero()
+    }
+
+    #[quickcheck]
+    fn prop_recip_right(a: Q231) -> TestResult {
+        match a.try_invert() {
+            None => TestResult::discard(),
+            Some(a_inv) => TestResult::from_bool(a * a_inv == Q231::one()),
         }
     }
 
-    quickcheck! {
-        fn prop_recip_right(a: Q231) -> TestResult {
-            if a.is_zero() {
-                TestResult::discard()
-            } else {
-                TestResult::from_bool(a * a.recip() == Q231::one())
-            }
+    #[quickcheck]
+    fn prop_recip_left(a: Q231) -> TestResult {
+        if a.is_zero() {
+            TestResult::discard()
+        } else {
+            TestResult::from_bool(a.invert() * a == Q231::one())
         }
     }
 
-    quickcheck! {
-        fn prop_recip_left(a: Q231) -> TestResult {
-            if a.is_zero() {
-                TestResult::discard()
-            } else {
-                TestResult::from_bool(a.recip() * a == Q231::one())
-            }
-        }
+    #[quickcheck]
+    fn prop_into_matrix_and_back(a: Q231) -> bool {
+        let b: Matrix3<Q231> = a.into();
+        Q231::from(b) == a
     }
 
-    quickcheck! {
-        fn prop_into_matrix_and_back(a: Q231) -> bool {
-            let b: Matrix3<Q231> = a.into();
-            Q231::from(b) == a
-        }
-    }
-
-    quickcheck! {
-        fn multiply_matrices(a: Q231) -> bool {
-            let m1: Matrix3<Q231> = a.into();
-            Q231::from(m1 *m1) == a * a
-        }
+    #[quickcheck]
+    fn multiply_matrices(a: Q231) -> bool {
+        let m1: Matrix3<Q231> = a.into();
+        Q231::from(m1 * m1) == a * a
     }
 }
