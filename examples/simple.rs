@@ -1,10 +1,10 @@
 use gmorph::prelude::*;
-use nalgebra::dimension::U100;
+use nalgebra::dimension::U50;
 use nalgebra::{ArrayStorage, Matrix, Matrix3};
 use std::fs;
 use std::io::Write;
 
-type MatrixM<N> = Matrix<N, U100, U100, ArrayStorage<N, U100, U100>>;
+type MatrixM<N> = Matrix<N, U50, U50, ArrayStorage<N, U50, U50>>;
 
 fn main() {
     let mut f = fs::File::create("result").unwrap();
@@ -16,7 +16,7 @@ fn main() {
         x_q231.into()
     });
 
-    for _ in 0..10 {
+    for _ in 0..1_000 {
         encode *= encode;
     }
 
