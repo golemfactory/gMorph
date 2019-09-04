@@ -1,5 +1,5 @@
 use gmorph::prelude::*;
-use nalgebra::Matrix2;
+use nalgebra::{Matrix2, Matrix3};
 use num_traits::{One, Zero};
 
 fn main() {
@@ -29,4 +29,14 @@ fn main() {
     println!("inverted = {}", inv_matrix);
     println!("left mul = {}", matrix * inv_matrix);
     println!("right mul = {}", inv_matrix * matrix);
+
+    let mut m: Matrix3<Q231> = Matrix3::identity();
+    m[0] = a;
+    m[1] = c;
+    m[4] = d;
+    let m_inv = invert_3x3(&m).unwrap();
+    println!("m = {}", m);
+    println!("m_inv = {}", m_inv);
+    println!("left mul = {}", m * m_inv);
+    println!("right mul = {}", m_inv * m);
 }
