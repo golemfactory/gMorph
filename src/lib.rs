@@ -66,19 +66,7 @@ mod tests {
         let matrix = Matrix2::new(a, b, c, d);
         match invert_2x2(&matrix) {
             None => TestResult::discard(),
-            Some(inverted) => {
-                let res = matrix * inverted;
-                let res2 = inverted * matrix;
-                let cmp = res == Matrix2::identity();
-
-                if !cmp {
-                    println!(
-                        "inverted={}, matrix={}, res={}, res2 = {}",
-                        inverted, matrix, res, res2
-                    );
-                }
-                TestResult::from_bool(matrix * inverted == Matrix2::identity())
-            }
+            Some(inverted) => TestResult::from_bool(matrix * inverted == Matrix2::identity()),
         }
     }
 }
