@@ -12,14 +12,13 @@
 //!
 //! ```
 //! use gmorph::*;
-//! use num_traits::Zero;
 //!
 //! let key_pair = KeyPair::default();
-//! let enc: Vec<_> = (1..10)
-//!     .map(|x| Encoded::encode(x).encrypt(&key_pair))
-//!     .collect();
-//! let enc = enc.into_iter().fold(Encoded::zero(), |acc, x| acc + x);
-//! let given = enc.decrypt(&key_pair).decode();
+//! let enc: Vec<_> = (1..10).map(|x| Enc::encrypt(&key_pair, x)).collect();
+//! let enc = enc
+//!     .into_iter()
+//!     .fold(Enc::encrypt(&key_pair, 0), |acc, x| acc + x);
+//! let given = enc.decrypt(&key_pair);
 //! let expected: u32 = (1..10).sum();
 //!
 //! assert_eq!(expected, given, "the sums should be equal, and equal to 45");
@@ -30,8 +29,7 @@
 //!
 //! [examples]: https://github.com/golemfactory/gMorph/tree/master/examples
 mod algebra;
-pub mod encode;
-pub mod encrypt;
+pub mod enc;
 
 #[macro_use]
 extern crate alga_derive;
@@ -40,5 +38,4 @@ extern crate alga_derive;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
-pub use self::encode::{Decode, Encode, Encoded};
-pub use self::encrypt::{Decrypt, Encrypt, KeyPair};
+pub use self::enc::{Decrypt, Enc, Encrypt, KeyPair};

@@ -1,13 +1,12 @@
 use gmorph::*;
-use num_traits::One;
 
 fn main() {
     let key_pair = KeyPair::default();
-    let enc: Vec<_> = (1..10)
-        .map(|x| Encoded::encode(x).encrypt(&key_pair))
-        .collect();
-    let enc = enc.into_iter().fold(Encoded::one(), |acc, x| acc * x);
-    let given = enc.decrypt(&key_pair).decode();
+    let enc: Vec<_> = (1..10).map(|x| Enc::encrypt(&key_pair, x)).collect();
+    let enc = enc
+        .into_iter()
+        .fold(Enc::encrypt(&key_pair, 1), |acc, x| acc * x);
+    let given = enc.decrypt(&key_pair);
     let expected: u32 = (1..10).fold(1, |acc, x| acc * x);
 
     assert_eq!(
