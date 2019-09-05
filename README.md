@@ -1,12 +1,10 @@
-
-
-
-
 # gMorph  - Fully Homomorphic Encryption library
 [![build-status]][build-link]
 
 [build-status]: https://dev.azure.com/kubkon/gmorph/_apis/build/status/golemfactory.gmorph?branchName=master
 [build-link]: https://dev.azure.com/kubkon/gmorph/_build?definitionId=4
+
+* [API Documentation (Development)](https://golemfactory.github.io/gMorph/gmorph/index.html)
 
 `gMorph` is written entirely in Rust and is meant to be easily
 cross-compiled to WebAssembly for use in [gWasm].
@@ -19,7 +17,7 @@ to break unexpectedly. If you find a bug, please file a bug report [here].
 
 ## Example usage:
 
-```
+```rust
 use gmorph::*;
 use num_traits::Zero;
 
