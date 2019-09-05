@@ -1,4 +1,4 @@
-use gmorph::prelude::*;
+use gmorph::*;
 use nalgebra::dimension::U5;
 use nalgebra::{ArrayStorage, Matrix};
 

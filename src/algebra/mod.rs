@@ -53,7 +53,7 @@ pub(crate) fn invert_3x3(matrix: &Matrix3<Q231>) -> Option<Matrix3<Q231>> {
     let a_inv = a.try_invert()?;
     let d_inv = invert_2x2(&d)?;
 
-    let x = a - (b * d * c)[0];
+    let x = a - (b * d_inv * c)[0];
     let y = d - c * a_inv * b;
 
     let x_inv = x.try_invert()?;
@@ -175,7 +175,6 @@ mod tests {
     }
 
     #[quickcheck]
-    #[ignore]
     fn invert_matrix3(m: M3Q231) -> TestResult {
         match invert_3x3(&m.0) {
             None => TestResult::discard(),

@@ -1,4 +1,4 @@
-use gmorph::prelude::*;
+use gmorph::*;
 use num_traits::One;
 
 fn main() {

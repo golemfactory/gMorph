@@ -1,16 +1,27 @@
+//! Types and traits which lift `u32` type to FHE compatible
+//! `Encoded` struct
 use super::algebra::{Mod231, Q231};
 use nalgebra::Matrix3;
 use num_traits::{One, Zero};
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 
+/// Helper trait for encoding `T` into some value `Self`
 pub trait Encode<T> {
+    /// Encodes `T` into `Self`
     fn encode(value: T) -> Self;
 }
 
+/// Helper trait for decoding `Self` into `T`
 pub trait Decode<T> {
+    /// Decodes `Self` into `T`
     fn decode(&self) -> T;
 }
 
+/// Wrapper type for lifting `u32` type to FHE compatible
+/// form
+///
+/// All FHE operations (currently, addition and multiplication)
+/// are defined in terms of this type.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Encoded {
     pub(crate) inner: Matrix3<Q231>,
