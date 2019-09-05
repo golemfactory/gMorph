@@ -8,12 +8,12 @@ use std::mem;
 use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Quaternion over a ring mod N
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct QuaternionM<T>
+#[derive(Copy, Clone, PartialEq)]
+pub(crate) struct QuaternionM<T>
 where
     T: Ring + fmt::Debug + Copy + Invertible + 'static,
 {
-    inner: Vector4<T>, // [x, y, z, w] or w + xi + yj + zk
+    pub(crate) inner: Vector4<T>, // [x, y, z, w] or w + xi + yj + zk
 }
 
 impl<T> QuaternionM<T>
@@ -93,12 +93,21 @@ where
     }
 }
 
+impl<T> fmt::Debug for QuaternionM<T>
+where
+    T: Ring + fmt::Debug + Copy + Invertible + 'static,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}+{:?}i+{:?}j+{:?}k", self.w, self.i, self.j, self.k)
+    }
+}
+
 impl<T> fmt::Display for QuaternionM<T>
 where
     T: Ring + fmt::Debug + fmt::Display + Copy + Invertible + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}+{}i+{}j+{}k", self.w, self.i, self.j, self.k)
+        fmt::Debug::fmt(self, f)
     }
 }
 

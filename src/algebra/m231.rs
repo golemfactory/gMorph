@@ -1,4 +1,4 @@
-use crate::Invertible;
+use super::Invertible;
 use alga::general::{AbstractMagma, Additive, Identity, Multiplicative, TwoSidedInverse};
 use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
@@ -7,10 +7,10 @@ use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 const MODULUS: u32 = 2147483647u32;
-const MODULUSi64: i64 = 2147483647i64;
-const MODULUSu64: u64 = 2147483647u64;
+const MODULUSI64: i64 = 2147483647i64;
+const MODULUSU64: u64 = 2147483647u64;
 
-#[derive(Clone, Copy, Debug, PartialEq, Alga)]
+#[derive(Clone, Copy, PartialEq, Alga)]
 #[alga_traits(Ring(Additive, Multiplicative))]
 pub struct Mod231(pub u32);
 
@@ -18,13 +18,19 @@ impl Invertible for Mod231 {
     type Item = Mod231;
 
     fn try_invert(&self) -> Option<Self::Item> {
-        modinverse::modinverse(self.0 as i64, MODULUSi64).map(|x| Mod231(x as u32))
+        modinverse::modinverse(self.0 as i64, MODULUSI64).map(|x| Mod231(x as u32))
+    }
+}
+
+impl fmt::Debug for Mod231 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
 impl fmt::Display for Mod231 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        fmt::Debug::fmt(self, f)
     }
 }
 
@@ -67,10 +73,10 @@ fn modulo(mut v: u32) -> u32 {
 
 #[inline]
 fn normalize_u64(mut v: u64) -> u32 {
-    if v >= MODULUSu64 {
-        v = (v >> 31) + (v & MODULUSu64);
-        while v >= MODULUSu64 {
-            v -= MODULUSu64;
+    if v >= MODULUSU64 {
+        v = (v >> 31) + (v & MODULUSU64);
+        while v >= MODULUSU64 {
+            v -= MODULUSU64;
         }
     }
     v as u32

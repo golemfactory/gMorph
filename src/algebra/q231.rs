@@ -1,12 +1,10 @@
-use super::m231::Mod231;
-use crate::quaternion::QuaternionM;
-use crate::Invertible;
+use super::{m231::Mod231, quaternion::QuaternionM, Invertible};
 use nalgebra::{Matrix3, Vector4};
 use num_traits::Zero;
 use rand::distributions::{Distribution, Standard};
 use rand::{thread_rng, Rng};
 
-pub type Q231 = QuaternionM<Mod231>;
+pub(crate) type Q231 = QuaternionM<Mod231>;
 
 impl From<Mod231> for Q231 {
     fn from(w: Mod231) -> Self {
@@ -49,7 +47,6 @@ impl Into<Matrix3<Q231>> for Q231 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mod231::Mod231;
     use nalgebra::Vector3;
     use num_traits::{One, Zero};
     use quickcheck::{Arbitrary, Gen, TestResult};
