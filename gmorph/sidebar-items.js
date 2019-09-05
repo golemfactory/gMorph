@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["encode","Types and traits which lift `u32` type to FHE compatible `Encoded` struct"],["encrypt","Types and traits which allow for encrypting/decrypting of `Encoded` data type"]]});
