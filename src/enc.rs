@@ -182,4 +182,36 @@ mod tests {
         let key_pair = KeyPair::default();
         assert_eq!(1, Enc::encrypt(&key_pair, 1).decrypt(&key_pair));
     }
+
+    /*
+    #[quickcheck]
+    fn paranoid_enc_mul_homomorphic(x: u32, y: u32) -> TestResult {
+        if x < MODULUS && y < MODULUS {
+            let key_pair = KeyPair::new();
+            let x1 = Enc::encrypt(&key_pair, x);
+            let y1 = Enc::encrypt(&key_pair, y);
+            let r = x1 * y1;
+            return TestResult::from_bool( r.decrypt(&key_pair) == normalize_u64(x as u64  * y as u64));
+        }
+
+        TestResult::discard()
+    }
+   */
+
+    #[quickcheck]
+    fn prop_enc_mul_homomorphic(x: u32, y: u32) -> bool {
+        let key_pair = KeyPair::new();
+        let enc_x = Enc::encrypt(&key_pair, x);
+        let enc_y = Enc::encrypt(&key_pair, y);
+        (enc_x * enc_y).decrypt(&key_pair) == x * y
+    }
+
+    #[quickcheck]
+    fn prop_enc_add_homomorphic(x: u32, y: u32) -> bool {
+        let key_pair = KeyPair::new();
+        let enc_x = Enc::encrypt(&key_pair, x);
+        let enc_y = Enc::encrypt(&key_pair, y);
+        (enc_x + enc_y).decrypt(&key_pair) == x + y
+    }
+
 }
