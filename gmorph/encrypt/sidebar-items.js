@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["KeyPair","Type representing a key pair which can be used for encrypting and decrypting `Encoded` data"]],"trait":[["Decrypt","Helper trait for decrypting `Self`"],["Encrypt","Helper trait for encrypting `Self`"]]});

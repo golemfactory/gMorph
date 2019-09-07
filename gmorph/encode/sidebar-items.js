@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Encoded","Wrapper type for lifting `u32` type to FHE compatible form"]],"trait":[["Decode","Helper trait for decoding `Self` into `T`"],["Encode","Helper trait for encoding `T` into some value `Self`"]]});

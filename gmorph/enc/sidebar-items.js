@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Enc","Wrapper type for lifting `u32` type to FHE compatible form"],["KeyPair","Type representing a key pair which can be used for encrypting and decrypting data"]],"trait":[["Decrypt","Helper trait for decrypting data"],["Encrypt","Helper trait for encrypting data"]]});
