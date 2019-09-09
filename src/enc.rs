@@ -6,7 +6,7 @@ use num_traits::Zero;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign, Neg};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
@@ -74,6 +74,35 @@ impl MulAssign for Enc {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs
+    }
+}
+
+impl Sub for Enc {
+    type Output = Self;
+
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            inner: self.inner - rhs.inner,
+        }
+    }
+}
+
+impl SubAssign for Enc {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs
+    }
+}
+
+impl Neg for Enc {
+    type Output = Self;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        Self {
+            inner: self.inner.neg(),
+        }
     }
 }
 
