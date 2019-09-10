@@ -79,7 +79,7 @@ impl MulAssign for Enc {
 
 /// Type representing a key pair which can be used for encrypting
 /// and decrypting data
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct KeyPair {
     forwards: Matrix3<Q231>,
     backwards: Matrix3<Q231>,
