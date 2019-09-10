@@ -19,3 +19,15 @@ serde_json = "1.0"
 [dev-dependencies]
 quickcheck = "0.9"
 quickcheck_macros = "0.8"
+
+[[bin]]
+name = "client1"
+path = "src/client1.rs"
+
+[[bin]]
+name = "server"
+path = "src/server.rs"
+
+[[bin]]
+name = "client2"
+path = "src/client2.rs"
