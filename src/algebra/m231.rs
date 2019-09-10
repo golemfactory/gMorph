@@ -5,12 +5,13 @@ use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
+use serde::{Serialize, Deserialize};
 
 const MODULUS: u32 = 2147483647u32;
 const MODULUSI64: i64 = 2147483647i64;
 const MODULUSU64: u64 = 2147483647u64;
 
-#[derive(Clone, Copy, PartialEq, Alga)]
+#[derive(Clone, Copy, PartialEq, Alga, Serialize, Deserialize)]
 #[alga_traits(Ring(Additive, Multiplicative))]
 pub struct Mod231(pub u32);
 

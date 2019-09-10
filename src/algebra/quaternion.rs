@@ -6,9 +6,10 @@ use num_traits::{One, Zero};
 use std::fmt;
 use std::mem;
 use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg, Sub, SubAssign};
+use serde::{Serialize, Deserialize};
 
 /// Quaternion over a ring mod N
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct QuaternionM<T>
 where
     T: Ring + fmt::Debug + Copy + Invertible + 'static,

@@ -6,13 +6,14 @@ use num_traits::Zero;
 use rand::prelude::*;
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
+use serde::{Serialize, Deserialize};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
 ///
 /// All FHE operations (currently, addition and multiplication)
 /// are defined in terms of this type.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Enc {
     inner: Matrix3<Q231>,
 }
