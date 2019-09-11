@@ -3,9 +3,9 @@ use alga::general::{AbstractMagma, Additive, Identity, Multiplicative, TwoSidedI
 use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
-use serde::{Serialize, Deserialize};
 
 const MODULUS: u32 = 2147483647u32;
 const MODULUSI64: i64 = 2147483647i64;
