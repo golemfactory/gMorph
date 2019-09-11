@@ -23,18 +23,15 @@ fn execute(x: Vec<Enc>, y: Vec<Enc>) -> (Enc, Enc) {
     (xy, xx)
 }
 
-
 fn merge(args : &Vec<String>, results: Vec<( (Vec<Enc>, Vec<Enc>), (Enc, Enc))>) {
     let mut keys_file = std::fs::File::open("keys.json").unwrap();
     let mut serialized_keypair = String::new();
     keys_file.read_to_string(&mut serialized_keypair).unwrap();
     let key_pair: KeyPair = serde_json::from_str(&serialized_keypair).unwrap();
-/*
-    let a: u32 = (&results).into_iter().map(|p| p.0.decrypt(&key_pair)).sum();
-    let b: u32 = results.into_iter().map(|p| p.1.decrypt(&key_pair)).sum();
-    */
-    let a = 28;
-    let b = 14;
+
+    let (ea, eb): (Enc, Enc) = results[0].1;
+    let a = ea.decrypt(&key_pair);
+    let b = eb.decrypt(&key_pair);
     let m = a as f64 / b as f64;
     println!("m = {}", m);
 }
