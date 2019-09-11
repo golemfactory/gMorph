@@ -39,12 +39,7 @@ fn merge(args : &Vec<String>, results: Vec<( (Vec<Enc>, Vec<Enc>), (Enc, Enc))>)
     	= results.into_iter()
 	  .map(|p| both(|x| x.decrypt(&key_pair), p.1))
  	  .fold((0,0), |acc, x| (acc.0 + x.0, acc.1 + x.1));
-/*
-    let a = ea.decrypt(&key_pair);
-    let b = eb.decrypt(&key_pair);
-    */
- //   let a = 28;
-//    let b = 11;
+
     let m = a as f64 / b as f64;
     println!("m = {}", m);
 }
