@@ -4,9 +4,9 @@ use super::algebra::{invert_3x3, Mod231, Q231};
 use nalgebra::Matrix3;
 use num_traits::Zero;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign};
-use serde::{Serialize, Deserialize};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
