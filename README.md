@@ -40,3 +40,28 @@ For instance, to run `examples/simple_mul.rs`, invoke:
 cargo run --release --example simple_mul
 ```
 
+### Linear regression example using WASM
+
+Generate encrpytion key and encrypt data (requestor side):
+
+```
+cargo run --release --example=client1
+```
+
+produces files `keys.json` (secret) and `data.json`
+
+Perform computation on encrypted data (provider side):
+
+```
+mkdir -p /tmp/wasm/{in,out}
+cp data.json /tmp/wasm/in/
+cargo rustc --example server --release --target wasm32-unknown-emscripten -- -C link-args="-s BINARYEN_ASYNC_COMPILATION=0"
+wasm-sandbox -I /tmp/wasm/in -O /tmp/wasm/out -j target/wasm32-unknown-emscripten/release/server.js -w target/wasm32-unknown-emscripten/release/server.wasm -o result.json  -- x
+```
+
+Decrypt and postprocess results (assuming `keys.json` in current directory)
+
+```
+cp /tmp/wasm/out/result.json .
+cargo run --example=client2 --release
+```
