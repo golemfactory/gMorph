@@ -5,7 +5,8 @@ use std::io::prelude::*;
 
 fn main() {
 
-    let mut data_file = std::fs::File::open("data.json").unwrap();
+    let mut data_file = std::fs::File::open("/data.json")
+        .expect("Failed to open data.json");
     let mut serialized = String::new();
     data_file.read_to_string(&mut serialized).unwrap();
     let data : (Vec<Enc>, Vec<Enc>) = serde_json::from_str(&serialized).unwrap();
@@ -14,7 +15,8 @@ fn main() {
     let xy = dot_product_enc(&x, &y);
     let xx = dot_product_enc(&x, &x);
     let serialized_result = serde_json::to_string(&(xy, xx)).unwrap();
-    let mut result_file = File::create("result.json").unwrap();
+    let mut result_file = File::create("result.json")
+        .expect("Failed to create result.json");
     result_file.write_all(serialized_result.as_bytes()).unwrap();
 }
 
@@ -27,7 +29,7 @@ fn dot_product_enc(v: &Vec<Enc>, w: &Vec<Enc>) -> Enc
 
     let mut sum = v[0]*w[0];
 
-    for index in 0..length {
+    for index in 1..length {
         sum = sum + v[index] * w[index];
     }
     sum
