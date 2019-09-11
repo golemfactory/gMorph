@@ -17,4 +17,5 @@ fn main() {
     let b = enc_result.1.decrypt(&key_pair);
     let m = a as f64 / b as f64;
     println!("m = {}", m);
+    println!("a = {} b= {}", a, b);
 }
