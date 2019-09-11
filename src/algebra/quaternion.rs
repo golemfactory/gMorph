@@ -3,10 +3,10 @@ use alga::general::Ring;
 use nalgebra::base::coordinates::IJKW;
 use nalgebra::{Vector3, Vector4};
 use num_traits::{One, Zero};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::mem;
 use std::ops::{Add, AddAssign, Deref, DerefMut, Mul, MulAssign, Neg, Sub, SubAssign};
-use serde::{Serialize, Deserialize};
 
 /// Quaternion over a ring mod N
 #[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
