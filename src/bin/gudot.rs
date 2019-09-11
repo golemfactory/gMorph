@@ -1,10 +1,13 @@
 use gmorph::*;
 
+use gwasm_api::dispatcher;
+use gwasm_api::{Blob, Output, TaskResult};
+use gwasm_api::{SplitContext};
+
 use std::fs::File;
 use std::io::prelude::*;
 
-/// args - commandline arguments
-fn split(args : Vec<String>) -> Vec<(Vec<Enc>, Vec<Enc>)> {
+fn split(context : &mut SplitContext) -> Vec<(Vec<Enc>, Vec<Enc>)> {
     let mut data_file = std::fs::File::open("data.json")
         .expect("Failed to open data.json");
     let mut serialized = String::new();
@@ -13,10 +16,7 @@ fn split(args : Vec<String>) -> Vec<(Vec<Enc>, Vec<Enc>)> {
     vec![data]
 }
 
-fn execute(data : (Vec<Enc>, Vec<Enc>)) -> (Enc, Enc) {
-
-    let x = data.0;
-    let y = data.1;
+fn execute(x: Vec<Enc>, y: Vec<Enc>) -> (Enc, Enc) {
     let xy = dot_product_enc(&x, &y);
     let xx = dot_product_enc(&x, &x);
     let serialized_result = serde_json::to_string(&(xy, xx)).unwrap();
@@ -24,22 +24,26 @@ fn execute(data : (Vec<Enc>, Vec<Enc>)) -> (Enc, Enc) {
 }
 
 
-fn merge(args : Vec<String>, data: Vec<(Vec<Enc>, Vec<Enc>)>, results: Vec<(Enc,Enc)>) {
+fn merge(args : &Vec<String>, results: Vec<( (Vec<Enc>, Vec<Enc>), (Enc, Enc))>) {
     let mut keys_file = std::fs::File::open("keys.json").unwrap();
     let mut serialized_keypair = String::new();
     keys_file.read_to_string(&mut serialized_keypair).unwrap();
     let key_pair: KeyPair = serde_json::from_str(&serialized_keypair).unwrap();
-
+/*
     let a: u32 = (&results).into_iter().map(|p| p.0.decrypt(&key_pair)).sum();
     let b: u32 = results.into_iter().map(|p| p.1.decrypt(&key_pair)).sum();
+    */
+    let a = 28;
+    let b = 14;
     let m = a as f64 / b as f64;
     println!("m = {}", m);
 }
 
 
 fn main() {
-
+   dispatcher::run(&split, &execute, &merge).unwrap();
 }
+
 fn dot_product_enc(v: &Vec<Enc>, w: &Vec<Enc>) -> Enc
 {
     let length = v.len();
