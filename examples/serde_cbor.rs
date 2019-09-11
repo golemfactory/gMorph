@@ -5,13 +5,11 @@ fn main() {
     let key_pair = KeyPair::new();
     let enc: Vec<_> = (1..10).map(|x| Enc::encrypt(&key_pair, x)).collect();
 
-
     let keys_file = File::create("keys.cbor").unwrap();
     serde_cbor::to_writer(keys_file, &key_pair).unwrap();
 
     let enc_file = File::create("enc.cbor").unwrap();
     serde_cbor::to_writer(enc_file, &enc).unwrap();
-
 
     let enc_file = File::open("enc.cbor").unwrap();
     let deserialized: Vec<Enc> = serde_cbor::from_reader(enc_file).unwrap();
