@@ -5,7 +5,7 @@ use std::io::prelude::*;
 
 fn main() {
 
-    let mut data_file = std::fs::File::open("/data.json")
+    let mut data_file = std::fs::File::open("data.json")
         .expect("Failed to open data.json");
     let mut serialized = String::new();
     data_file.read_to_string(&mut serialized).unwrap();
