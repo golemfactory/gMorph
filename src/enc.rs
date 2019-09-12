@@ -2,11 +2,11 @@
 //! `Enc` struct
 use super::algebra::{invert_3x3, Mod231, Q231};
 use nalgebra::Matrix3;
-use num_traits::Zero;
+use num_traits::{Zero,One};
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
@@ -17,6 +17,7 @@ use std::ops::{Add, AddAssign, Mul, MulAssign};
 pub struct Enc {
     inner: Matrix3<Q231>,
 }
+
 
 impl Enc {
     #[inline]
@@ -32,6 +33,8 @@ impl Enc {
         let dec = key_pair.backwards * self.inner * key_pair.forwards;
         dec[0].w.0
     }
+
+    pub fn invertible(&self) -> bool { invert_3x3(&self.inner).is_some() }
 }
 
 impl fmt::Display for Enc {
@@ -77,6 +80,28 @@ impl MulAssign for Enc {
     }
 }
 
+impl Sub for Enc {
+    type Output = Self;
+
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            inner: self.inner - rhs.inner,
+        }
+    }
+}
+
+impl SubAssign for Enc {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs
+    }
+}
+
+impl One for Enc {
+    fn one() -> Self { Self{ inner: Matrix3::identity()} }
+    fn is_one(&self) -> bool { false }
+}
 /// Type representing a key pair which can be used for encrypting
 /// and decrypting data
 #[derive(Debug, Serialize, Deserialize)]
