@@ -7,7 +7,7 @@ use nalgebra::{dimension::U2, storage::Storage, Matrix, Matrix2, Matrix3};
 pub(crate) use self::m231::Mod231;
 pub(crate) use self::q231::Q231;
 
-pub(crate) trait Invertible {
+pub trait Invertible {
     type Item;
 
     fn try_invert(&self) -> Option<Self::Item>;
