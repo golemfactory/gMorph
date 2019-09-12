@@ -12,7 +12,7 @@ fn main() {
     let mut result_file = std::fs::File::open("result.json").unwrap();
     let mut serialized = String::new();
     result_file.read_to_string(&mut serialized).unwrap();
-    let enc_result : (Enc, Enc) = serde_json::from_str(&serialized).unwrap();
+    let enc_result: (Enc, Enc) = serde_json::from_str(&serialized).unwrap();
     let a = enc_result.0.decrypt(&key_pair);
     let b = enc_result.1.decrypt(&key_pair);
     let m = a as f64 / b as f64;
