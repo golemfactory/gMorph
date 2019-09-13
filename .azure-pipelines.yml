@@ -2,7 +2,7 @@ name: $(Build.SourceBranch)-$(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-    - '*'
+    - 'master'
 
 jobs:
 - job: Build
@@ -52,8 +52,13 @@ jobs:
       displayName: Cargo build
     - bash: RUST_BACKTRACE=1 cargo test --all
       displayName: Cargo test
-    - script: cargo doc
+    - script: cargo doc --no-deps --all
       condition: eq(variables['Agent.OS'], 'Darwin')
       displayName: Cargo doc
+    - script: |
+        rustup target add wasm32-unknown-emscripten
+        cargo build --target wasm32-unknown-emscripten
+      condition: eq(variables['Agent.OS'], 'Darwin')
+      displayName: Test wasm32 Emscripten target
 
 
