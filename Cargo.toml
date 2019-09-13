@@ -15,8 +15,10 @@ modinverse = "0.1"
 rand = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 serde_cbor = "0.10.1"
 
-[dev-dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 quickcheck = "0.9"
 quickcheck_macros = "0.8"
