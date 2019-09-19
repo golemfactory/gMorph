@@ -122,7 +122,7 @@ impl Into<i32> for Mod231 {
         let max = MODULUS / 2;
 
         if y > max {
-            ((y - max) as i32).neg()
+            (y as i32) - MODULUSI32
         } else {
             y as i32
         }
@@ -264,4 +264,12 @@ mod tests {
 
         TestResult::from_bool(x * x.invert() == Mod231(1))
     }
+
+    #[quickcheck]
+    fn prop_roundtrip_i32(x: Mod231) -> bool {
+        let y: i32 = x.into();
+        let z: Mod231 = Mod231::from(y);
+        x == z
+    }
+
 }
