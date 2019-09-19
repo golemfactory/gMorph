@@ -102,17 +102,14 @@ impl From<i32> for Mod231 {
             let y = (x + MODULUSI32);
             if y < 0 {
                 panic!("i32 out of range for Mod231")
-            }
-            else {
+            } else {
                 y as u32
             }
-        }
-        else {
+        } else {
             if x < MODULUSI32 {
                 x as u32
-            }
-            else {
-              panic!("i32 out of range for Mod231")
+            } else {
+                panic!("i32 out of range for Mod231")
             }
         };
 
@@ -125,15 +122,13 @@ impl Into<i32> for Mod231 {
         let y: u32 = self.0;
         let max = MODULUS / 2;
 
-        if y > max  {
+        if y > max {
             ((y - max) as i32).neg()
-        }
-        else {
-           y as i32
+        } else {
+            y as i32
         }
     }
 }
-
 
 impl Add for Mod231 {
     type Output = Self;
