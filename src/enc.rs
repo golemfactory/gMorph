@@ -32,6 +32,20 @@ impl Enc {
         let dec = key_pair.backwards * self.inner * key_pair.forwards;
         dec[0].w.0
     }
+
+    #[inline]
+    fn enc_i32(key_pair: &KeyPair, value: i32) -> Self {
+        let enc: Matrix3<_> = Q231::from(Mod231::from(value)).into();
+        let inner = key_pair.forwards * enc * key_pair.backwards;
+
+        Self { inner }
+    }
+
+    #[inline]
+    fn dec_i32(&self, key_pair: &KeyPair) -> i32 {
+        let dec = key_pair.backwards * self.inner * key_pair.forwards;
+        Mod231::into(dec[0].w)
+    }
 }
 
 impl fmt::Display for Enc {
