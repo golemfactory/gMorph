@@ -1,8 +1,9 @@
-use super::{m231::Mod231, quaternion::QuaternionM, Invertible};
+use super::{invert_3x3, m231::try_sqrt, m231::Mod231, quaternion::QuaternionM, Invertible};
 use nalgebra::{Matrix3, Vector4};
 use num_traits::Zero;
 use rand::distributions::{Distribution, Standard};
 use rand::{thread_rng, Rng};
+use std::ops::Neg;
 
 pub(crate) type Q231 = QuaternionM<Mod231>;
 
@@ -39,6 +40,17 @@ impl Into<Matrix3<Q231>> for Q231 {
         let mut noise = Matrix3::<Q231>::zeros()
             .map(|_| thread_rng().gen::<Q231>())
             .upper_triangle();
+        // Make sure the middle element (and hence the matrix) is noninvertible
+        // The loop should not run many times - statistically every 2nd element has a square root
+        loop {
+            let c: Q231 = thread_rng().gen::<Q231>();
+            let y: Mod231 = c.i * c.i + c.j * c.j + c.k * c.k;
+            if let Some(x) = try_sqrt(y.neg()) {
+                noise[4] = Q231::new(x, c.i, c.j, c.k);
+                assert_eq!(noise[4].norm2(), Mod231(0));
+                break;
+            }
+        }
         noise[0] = self;
         noise
     }
@@ -133,5 +145,11 @@ mod tests {
     fn multiply_matrices(a: Q231) -> bool {
         let m1: Matrix3<Q231> = a.into();
         Q231::from(m1 * m1) == a * a
+    }
+
+    #[quickcheck]
+    fn prop_noninvertible(a: Q231) -> bool {
+        let b: Matrix3<Q231> = a.into();
+        invert_3x3(&b) == None
     }
 }
