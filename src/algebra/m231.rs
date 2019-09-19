@@ -97,9 +97,8 @@ impl From<u32> for Mod231 {
 
 impl From<i32> for Mod231 {
     fn from(x: i32) -> Self {
-        let max = MODULUS / 2;
         let y: u32 = if x < 0 {
-            let y = (x + MODULUSI32);
+            let y = x + MODULUSI32;
             if y < 0 {
                 panic!("i32 out of range for Mod231")
             } else {
