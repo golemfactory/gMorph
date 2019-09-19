@@ -6,7 +6,7 @@ use num_traits::Zero;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign, Neg};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
