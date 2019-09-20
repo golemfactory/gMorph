@@ -6,7 +6,7 @@ use num_traits::{Zero,One};
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
@@ -34,7 +34,22 @@ impl Enc {
         dec[0].w.0
     }
 
+
     pub fn invertible(&self) -> bool { invert_3x3(&self.inner).is_some() }
+
+    #[inline]
+    fn enc_i32(key_pair: &KeyPair, value: i32) -> Self {
+        let enc: Matrix3<_> = Q231::from(Mod231::from(value)).into();
+        let inner = key_pair.forwards * enc * key_pair.backwards;
+
+        Self { inner }
+    }
+
+    #[inline]
+    fn dec_i32(&self, key_pair: &KeyPair) -> i32 {
+        let dec = key_pair.backwards * self.inner * key_pair.forwards;
+        Mod231::into(dec[0].w)
+    }
 }
 
 impl fmt::Display for Enc {
@@ -102,6 +117,18 @@ impl One for Enc {
     fn one() -> Self { Self{ inner: Matrix3::identity()} }
     fn is_one(&self) -> bool { false }
 }
+
+impl Neg for Enc {
+    type Output = Self;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        Self {
+            inner: self.inner.neg(),
+        }
+    }
+}
+
 /// Type representing a key pair which can be used for encrypting
 /// and decrypting data
 #[derive(Debug, Serialize, Deserialize)]
