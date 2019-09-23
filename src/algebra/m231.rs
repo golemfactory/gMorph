@@ -4,6 +4,7 @@ use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -106,12 +107,14 @@ impl From<u32> for Mod231 {
     }
 }
 
-impl From<i32> for Mod231 {
-    fn from(x: i32) -> Self {
+impl TryFrom<i32> for Mod231 {
+    type Error = &'static str;
+
+    fn try_from(x: i32) -> Result<Self, Self::Error> {
         let y: u32 = if x < 0 {
             let y = x + MODULUSI32;
             if y < 0 {
-                panic!("i32 out of range for Mod231")
+                return Err("i32 out of range for Mod231");
             } else {
                 y as u32
             }
@@ -119,11 +122,11 @@ impl From<i32> for Mod231 {
             if x < MODULUSI32 {
                 x as u32
             } else {
-                panic!("i32 out of range for Mod231")
+                return Err("i32 out of range for Mod231");
             }
         };
 
-        Mod231(normalize(y))
+        Ok(Mod231(normalize(y)))
     }
 }
 

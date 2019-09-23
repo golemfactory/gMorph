@@ -5,6 +5,7 @@ use nalgebra::Matrix3;
 use num_traits::Zero;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -34,11 +35,12 @@ impl Enc {
     }
 
     #[inline]
-    fn enc_i32(key_pair: &KeyPair, value: i32) -> Self {
-        let enc: Matrix3<_> = Q231::from(Mod231::from(value)).into();
+    fn enc_i32(key_pair: &KeyPair, value: i32) -> Option<Self> {
+        let m = Mod231::try_from(value).ok()?;
+        let enc: Matrix3<_> = Q231::from(m).into();
         let inner = key_pair.forwards * enc * key_pair.backwards;
 
-        Self { inner }
+        Some(Self { inner })
     }
 
     #[inline]
