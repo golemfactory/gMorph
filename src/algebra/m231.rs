@@ -11,7 +11,7 @@ const MODULUS: u32 = 2147483647u32; // 2^31 -1
 const MODULUSI32: i32 = 2147483647i32;
 const MODULUSI64: i64 = 2147483647i64;
 const MODULUSU64: u64 = 2147483647u64;
-const MAGIC229: usize = 536870912; // (MODULUS+1) / 4 = 2^29
+const MAGIC229: usize = 536870912; // (MODULUS+1) / 4 = 2^29 - see try_sqrt for explanation
 
 #[derive(Clone, Copy, PartialEq, Alga, Serialize, Deserialize)]
 #[alga_traits(Ring(Additive, Multiplicative))]
