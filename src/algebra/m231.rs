@@ -86,6 +86,16 @@ fn normalize_u64(mut v: u64) -> u32 {
 }
 
 #[inline]
+// should work for an argument of the form a * b where a,b < MODULUS
+fn normalize_product(mut v: u64) -> u32 {
+    v = (v >> 31) + (v & MODULUSU64);
+    if v >= MODULUSU64 {
+        v -= MODULUSU64;
+    }
+    v as u32
+}
+
+#[inline]
 fn normalize(x: u32) -> u32 {
     modulo(x)
 }
@@ -110,11 +120,17 @@ impl AddAssign for Mod231 {
     }
 }
 
+
 impl Mul for Mod231 {
     type Output = Self;
 
+#[cfg(not(feature = "experimental-normalize"))]
     fn mul(self, other: Self) -> Self::Output {
         Self(normalize_u64(self.0 as u64 * other.0 as u64))
+    }
+#[cfg(feature = "experimental-normalize")]
+    fn mul(self, other: Self) -> Self::Output {
+        Self(normalize_product(self.0 as u64 * other.0 as u64))
     }
 }
 
@@ -226,7 +242,22 @@ mod tests {
 
     #[quickcheck]
     fn prop_normalize(x: u32) -> bool {
-        normalize(x) == ((x % MODULUS) + MODULUS) % MODULUS
+        normalize(x) == (x % MODULUS)
+    }
+
+    #[quickcheck]
+    fn prop_normalize_u64(x: u64) -> bool {
+        normalize_u64(x) == (x % MODULUSU64) as u32
+    }
+
+    #[quickcheck]
+    fn prop_normalize_product(a: u32, b: u32) -> TestResult {
+        if a >= MODULUS || b >= MODULUS {
+            return TestResult::discard();
+        }
+        let product = a as u64 * b as u64;
+        let prop = normalize_product(product) == (product % MODULUSU64) as u32;
+        TestResult::from_bool(prop)
     }
 
     #[quickcheck]

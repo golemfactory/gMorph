@@ -1,8 +1,8 @@
 #![feature(test)]
 
 extern crate test;
-use test::Bencher;
 use gmorph::*;
+use test::Bencher;
 
 #[bench]
 fn bench_mul(b: &mut Bencher) {
