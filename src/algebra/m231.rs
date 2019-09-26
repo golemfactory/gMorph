@@ -120,15 +120,14 @@ impl AddAssign for Mod231 {
     }
 }
 
-
 impl Mul for Mod231 {
     type Output = Self;
 
-#[cfg(not(feature = "experimental-normalize"))]
+    #[cfg(not(feature = "experimental-normalize"))]
     fn mul(self, other: Self) -> Self::Output {
         Self(normalize_u64(self.0 as u64 * other.0 as u64))
     }
-#[cfg(feature = "experimental-normalize")]
+    #[cfg(feature = "experimental-normalize")]
     fn mul(self, other: Self) -> Self::Output {
         Self(normalize_product(self.0 as u64 * other.0 as u64))
     }
