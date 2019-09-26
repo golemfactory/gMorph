@@ -86,12 +86,12 @@ fn normalize_u64(mut v: u64) -> u32 {
 }
 
 #[inline]
-// should work for an argument of the form a * b where a,b < MODULUS
+// should work for arguments up to (MODULUS-1)*(MODULUS-1)
+// which is the case for products of the form a * b where a,b < MODULUS
 fn normalize_product(mut v: u64) -> u32 {
     v = (v >> 31) + (v & MODULUSU64);
-    if v >= MODULUSU64 {
-        v -= MODULUSU64;
-    }
+    v = (v >> 31) + (v & MODULUSU64); // sic!
+
     v as u32
 }
 
