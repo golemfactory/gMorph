@@ -214,5 +214,4 @@ mod tests {
         let enc_y = Enc::encrypt(&key_pair, y);
         (enc_x + enc_y).decrypt(&key_pair) == x + y
     }
-
 }
