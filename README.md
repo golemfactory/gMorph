@@ -9,11 +9,14 @@
 `gMorph` is written entirely in Rust and is meant to be easily
 cross-compiled to WebAssembly for use in [gWasm].
 
-`gMorph` is very much experimental in nature so things are expected
-to break unexpectedly. If you find a bug, please file a bug report [here].
-
 [gWasm]: https://docs.golem.network/#/Products/Brass-Beta/gWASM
 [here]: https://github.com/golemfactory/gmorph/issues
+
+## Disclaimer
+
+`gMorph` is very much experimental in nature so things are expected
+to break unexpectedly. Also, please note that we make no claims about security of the encryption scheme.
+If you find a bug, please file a bug report [here].
 
 ## Example usage:
 
