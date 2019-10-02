@@ -16,6 +16,7 @@ cross-compiled to WebAssembly for use in [gWasm].
 
 `gMorph` is very much experimental in nature so things are expected
 to break unexpectedly. Also, please note that we make no claims about security of the encryption scheme.
+This work is provided as the Proof of Concept for FHE on gWASM, basically for demonstration purposes.
 If you find a bug, please file a bug report [here].
 
 ## Example usage:
