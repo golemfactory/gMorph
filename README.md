@@ -1,8 +1,8 @@
 # gMorph  - Fully Homomorphic Encryption library
 [![build-status]][build-link]
 
-[build-status]: https://dev.azure.com/kubkon/gmorph/_apis/build/status/golemfactory.gmorph?branchName=master
-[build-link]: https://dev.azure.com/kubkon/gmorph/_build?definitionId=4
+[build-status]: https://github.com/golemfactory/gmorph/workflows/Continuous%20Integration/badge.svg
+[build-link]: https://github.com/golemfactory/gMorph/actions
 
 * [API Documentation (Development)](https://golemfactory.github.io/gMorph/gmorph/index.html)
 
