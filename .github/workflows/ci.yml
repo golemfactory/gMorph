@@ -1,0 +1,110 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_stable:
+    name: Build stable
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macOS, windows]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        components: rustfmt
+    - name: Check formatting
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --all -- --check
+    - name: Build debug
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+    - name: Build release
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release
+        
+  build_nightly:
+    name: Build beta & nightly
+    runs-on: macOS-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [beta, nightly]
+        
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust }}
+        override: true
+    - name: Build debug
+      continue-on-error: true
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macOS, windows]
+        
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Run tests
+      uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --all
+
+  doc:
+    name: Doc
+    runs-on: macOS-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Generate docs
+      uses: actions-rs/cargo@v1
+      with:
+        command: doc
+        args: --no-deps --all
