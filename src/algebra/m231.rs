@@ -323,9 +323,8 @@ mod tests {
     }
 
     #[quickcheck]
-    fn prop_roundtrip_i32(x: Mod231) -> bool {
+    fn prop_roundtrip_i32(x: Mod231) -> Result<bool, &'static str> {
         let y: i32 = x.into();
-        let z: Result<Mod231, _> = Mod231::try_from(y);
-        z == Ok(x)
+        Mod231::try_from(y).map(|z| z == x)
     }
 }
