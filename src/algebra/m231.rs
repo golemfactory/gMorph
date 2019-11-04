@@ -7,9 +7,11 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
-const MODULUS: u32 = 2147483647u32;
+const MODULUS: u32 = 2147483647u32; // 2^31 -1
+const MODULUSI32: i32 = 2147483647i32;
 const MODULUSI64: i64 = 2147483647i64;
 const MODULUSU64: u64 = 2147483647u64;
+const MAGIC229: usize = 536870912; // (MODULUS+1) / 4 = 2^29 - see try_sqrt for explanation
 
 #[derive(Clone, Copy, PartialEq, Alga, Serialize, Deserialize)]
 #[alga_traits(Ring(Additive, Multiplicative))]
@@ -194,6 +196,17 @@ impl PartialEq<u32> for Mod231 {
     }
 }
 
+/// Try to solve the equation x^2 = a in our modular arithmetic
+/// Since MODULUS = 3 (mod 4), the solution, if exists, is x = a^((MODULUS+1)/4)
+pub fn try_sqrt(a: Mod231) -> Option<Mod231> {
+    let x = num_traits::pow::pow(a, MAGIC229);
+    if x * x == a {
+        Some(x)
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -228,5 +241,17 @@ mod tests {
         }
 
         TestResult::from_bool(x * x.invert() == Mod231(1))
+    }
+
+    #[test]
+    fn test_sqrt() {
+        for i in 10..20 {
+            let a = Mod231(i);
+            let r = try_sqrt(a);
+            println!("a = {}, r = {:?}", a, r);
+            if let Some(x) = r {
+                assert_eq!(x * x, a);
+            }
+        }
     }
 }
