@@ -16,6 +16,9 @@ rand = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
+[features]
+experimental-normalize = []
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 serde_cbor = "0.10.1"
 
