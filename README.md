@@ -25,7 +25,7 @@ to break unexpectedly. Also, please note that we make no claims about security o
 This work is provided as the Proof of Concept for FHE on gWASM, basically for demonstration purposes.
 If you find a bug, please file a bug report [here].
 
-```
+```toml
 # Cargo.toml
 [dependencies]
 gmorph = "0.1"
