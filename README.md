@@ -1,13 +1,19 @@
-# gMorph  - Fully Homomorphic Encryption library
-[![build-status]][build-link]
+<div align="center">
+  <h1><code>gmorph</code></h1>
 
-[build-status]: https://github.com/golemfactory/gmorph/workflows/Continuous%20Integration/badge.svg
-[build-link]: https://github.com/golemfactory/gMorph/actions
+  <p>
+    <strong>Fully homomorphic encryption library for gWasm.</strong>
+  </p>
 
-* [API Documentation (Development)](https://golemfactory.github.io/gMorph/gmorph/index.html)
+  <p>
+    <a href="https://github.com/golemfactory/gmorph/actions"><img src="https://github.com/golemfactory/gmorph/workflows/Continuous%20Integration/badge.svg" /></a>
+    <a href="https://crates.io/crates/gmorph"><img src="https://img.shields.io/crates/v/gmorph.svg?style=flat-square" alt="Crates.io version" /></a>
+    <a href="https://crates.io/crates/gmorph"><img src="https://img.shields.io/crates/d/gmorph.svg?style=flat-square" alt="Download" /></a>
+    <a href="https://docs.rs/gmorph/"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
+  </p>
+</div>
 
-`gMorph` is written entirely in Rust and is meant to be easily
-cross-compiled to WebAssembly for use in [gWasm].
+`gMorph` is written entirely in Rust and is meant to be easily cross-compiled to WebAssembly for use in [gWasm].
 
 [gWasm]: https://docs.golem.network/#/Products/Brass-Beta/gWASM
 [here]: https://github.com/golemfactory/gmorph/issues
@@ -18,6 +24,12 @@ cross-compiled to WebAssembly for use in [gWasm].
 to break unexpectedly. Also, please note that we make no claims about security of the encryption scheme.
 This work is provided as the Proof of Concept for FHE on gWASM, basically for demonstration purposes.
 If you find a bug, please file a bug report [here].
+
+```
+# Cargo.toml
+[dependencies]
+gmorph = "0.1"
+```
 
 ## Example usage:
 
