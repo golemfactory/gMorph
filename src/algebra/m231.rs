@@ -4,6 +4,7 @@ use num_traits::identities::{One, Zero};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -103,6 +104,42 @@ fn normalize(x: u32) -> u32 {
 impl From<u32> for Mod231 {
     fn from(x: u32) -> Self {
         Mod231(normalize(x))
+    }
+}
+
+impl TryFrom<i32> for Mod231 {
+    type Error = &'static str;
+
+    fn try_from(x: i32) -> Result<Self, Self::Error> {
+        let y: u32 = if x < 0 {
+            let y = x + MODULUSI32;
+            if y < 0 {
+                return Err("i32 out of range for Mod231");
+            } else {
+                y as u32
+            }
+        } else {
+            if x < MODULUSI32 {
+                x as u32
+            } else {
+                return Err("i32 out of range for Mod231");
+            }
+        };
+
+        Ok(Mod231(normalize(y)))
+    }
+}
+
+impl Into<i32> for Mod231 {
+    fn into(self) -> i32 {
+        let y: u32 = self.0;
+        let max = MODULUS / 2;
+
+        if y > max {
+            (y as i32) - MODULUSI32
+        } else {
+            y as i32
+        }
     }
 }
 
@@ -283,5 +320,11 @@ mod tests {
                 assert_eq!(x * x, a);
             }
         }
+    }
+
+    #[quickcheck]
+    fn prop_roundtrip_i32(x: Mod231) -> Result<bool, &'static str> {
+        let y: i32 = x.into();
+        Mod231::try_from(y).map(|z| z == x)
     }
 }

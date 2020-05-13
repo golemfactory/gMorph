@@ -5,8 +5,9 @@ use nalgebra::Matrix3;
 use num_traits::Zero;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::fmt;
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// Wrapper type for lifting `u32` type to FHE compatible
 /// form
@@ -31,6 +32,21 @@ impl Enc {
     fn dec(&self, key_pair: &KeyPair) -> u32 {
         let dec = key_pair.backwards * self.inner * key_pair.forwards;
         dec[0].w.0
+    }
+
+    #[inline]
+    fn enc_i32(key_pair: &KeyPair, value: i32) -> Option<Self> {
+        let m = Mod231::try_from(value).ok()?;
+        let enc: Matrix3<_> = Q231::from(m).into();
+        let inner = key_pair.forwards * enc * key_pair.backwards;
+
+        Some(Self { inner })
+    }
+
+    #[inline]
+    fn dec_i32(&self, key_pair: &KeyPair) -> i32 {
+        let dec = key_pair.backwards * self.inner * key_pair.forwards;
+        Mod231::into(dec[0].w)
     }
 }
 
@@ -74,6 +90,35 @@ impl MulAssign for Enc {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs
+    }
+}
+
+impl Sub for Enc {
+    type Output = Self;
+
+    #[inline]
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            inner: self.inner - rhs.inner,
+        }
+    }
+}
+
+impl SubAssign for Enc {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs
+    }
+}
+
+impl Neg for Enc {
+    type Output = Self;
+
+    #[inline]
+    fn neg(self) -> Self::Output {
+        Self {
+            inner: self.inner.neg(),
+        }
     }
 }
 
